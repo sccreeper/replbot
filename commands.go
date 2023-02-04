@@ -3,13 +3,13 @@ package main
 import dg "github.com/bwmarrin/discordgo"
 
 const (
-	PythonModeOption  int = 1
+	JSModeOption      int = 1
 	SessionModeOption int = 2
 )
 
 const (
 	PythonLanguageOption int = 1
-	JSLanguageOption     int = 1
+	JSLanguageOption     int = 2
 )
 
 var (
@@ -25,8 +25,8 @@ var (
 					Type:        dg.ApplicationCommandOptionInteger,
 					Choices: []*dg.ApplicationCommandOptionChoice{
 						{
-							Name:  "python",
-							Value: PythonLanguageOption,
+							Name:  "JavaScript",
+							Value: JSLanguageOption,
 						},
 					},
 				},
@@ -47,8 +47,8 @@ var (
 					Required:    true,
 					Choices: []*dg.ApplicationCommandOptionChoice{
 						{
-							Name:  "python",
-							Value: PythonModeOption,
+							Name:  "javascript",
+							Value: JSModeOption,
 						},
 						{
 							Name:  "session",
