@@ -12,6 +12,11 @@ import (
 
 var sessions map[int64]otto.Otto
 
+type Session struct {
+	VM          otto.Otto
+	TimeCreated uint64
+}
+
 func init() {
 	sessions = make(map[int64]otto.Otto)
 }
@@ -47,10 +52,18 @@ func handle_eval(s *dg.Session, i *dg.InteractionCreate) {
 		vm.Run("console.log = __log__;")
 
 		value, err := vm.Run(code_string)
-		check_error(err)
 
-		value_string, err := value.ToString()
-		check_error(err)
+		var value_string string
+
+		if err != nil {
+
+			value_string = fmt.Sprintf("**Error:** `%s`", err.Error())
+
+		} else {
+
+			value_string, err = value.ToString()
+			check_error(err)
+		}
 
 		s.InteractionRespond(i.Interaction, &dg.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -63,7 +76,7 @@ func handle_eval(s *dg.Session, i *dg.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &dg.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &dg.InteractionResponseData{
-				Content: "Unrecognized option. Try restarting your Discord client.",
+				Content: "Unrecognized option. Try restarting your Discord client. If the problem persists contact the maker of this bot.",
 			},
 		})
 	}
