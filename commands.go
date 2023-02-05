@@ -25,7 +25,7 @@ var (
 					Type:        dg.ApplicationCommandOptionInteger,
 					Choices: []*dg.ApplicationCommandOptionChoice{
 						{
-							Name:  "JavaScript",
+							Name:  "javascript",
 							Value: JSLanguageOption,
 						},
 					},
