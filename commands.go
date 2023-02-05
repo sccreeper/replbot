@@ -68,6 +68,10 @@ var (
 			Name:        "info",
 			Description: "Bot info",
 		},
+		{
+			Name:        "help",
+			Description: "Help menu",
+		},
 	}
 
 	command_handlers = map[string]func(s *dg.Session, i *dg.InteractionCreate){
@@ -75,5 +79,6 @@ var (
 		"end":      handle_end,
 		"start":    handle_start,
 		"info":     handle_info,
+		"help":     handle_help,
 	}
 )

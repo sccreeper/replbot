@@ -200,3 +200,27 @@ __Bot stats__
 	)
 
 }
+
+func handle_help(s *dg.Session, i *dg.InteractionCreate) {
+
+	s.InteractionRespond(i.Interaction, &dg.InteractionResponse{
+		Type: dg.InteractionResponseChannelMessageWithSource,
+		Data: &dg.InteractionResponseData{
+			Embeds: []*dg.MessageEmbed{
+				{
+					Title:       "❓ Help",
+					Description: "Help menu",
+					Fields: []*dg.MessageEmbedField{
+						{Name: "/help", Value: "Help command"},
+						{Name: "/evaluate <mode> <code>", Value: "Evaluates code in a REPL session or on it's own."},
+						{Name: "/start <language>", Value: "Start a REPL session with a specified language. Sessions timeout after 5 minutes of inactivity."},
+						{Name: "/end", Value: "Ends your REPL session."},
+						{Name: "/info", Value: "About page for the bot."},
+					},
+					Color: 16766305,
+				},
+			},
+		},
+	})
+
+}
