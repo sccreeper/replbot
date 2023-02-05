@@ -51,6 +51,20 @@ func handle_eval(s *dg.Session, i *dg.InteractionCreate) {
 
 		vm.Run("console.log = __log__;")
 
+		// Set window interval & timeout
+
+		msg, err := otto.ToValue("setInterval is not supported.")
+		check_error(err)
+		vm.Set("setInterval", func(call otto.FunctionCall) otto.Value {
+			return msg
+		})
+
+		msg, err = otto.ToValue("setTimeout is not supported.")
+		check_error(err)
+		vm.Set("setTimeout", func(call otto.FunctionCall) otto.Value {
+			return msg
+		})
+
 		value, err := vm.Run(code_string)
 
 		var value_string string
