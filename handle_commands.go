@@ -7,13 +7,16 @@ import (
 	"log"
 	"time"
 
-	"github.com/bwmarrin/discordgo"
 	dg "github.com/bwmarrin/discordgo"
 	"github.com/robertkrimen/otto"
 )
 
 var (
 	js_sessions map[string]Session = map[string]Session{}
+)
+
+const (
+	MaxCodeLength int = 512
 )
 
 type Session struct {
@@ -29,6 +32,10 @@ func handle_eval(s *dg.Session, i *dg.InteractionCreate) {
 	mode := options[0].IntValue()
 	code_string := options[1].StringValue()
 
+	if len(code_string) > MaxCodeLength {
+		default_resp(s, i.Interaction, fmt.Sprintf("🔴 Code is too long (max allowed is %d). Yours was %d char(s) long.", MaxCodeLength, len(code_string)))
+	}
+
 	switch mode {
 	case int64(JSModeOption):
 		var value_string string
@@ -42,7 +49,7 @@ func handle_eval(s *dg.Session, i *dg.InteractionCreate) {
 
 		} else {
 
-			value, err := vm.Run(code_string)
+			value, err := run_code(vm, code_string, 2)
 
 			if err != nil {
 				value_string = fmt.Sprintf("🔴 **Error:** `%s`", trunc_err(err.Error()))
@@ -54,49 +61,32 @@ func handle_eval(s *dg.Session, i *dg.InteractionCreate) {
 			}
 		}
 
-		s.InteractionRespond(i.Interaction, &dg.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &dg.InteractionResponseData{
-				Content: value_string,
-			},
-		})
+		default_resp(s, i.Interaction, value_string)
+
 	case int64(SessionModeOption):
 
 		if _, ok := js_sessions[resolve_user(i).ID]; !ok {
-			s.InteractionRespond(i.Interaction, &dg.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &dg.InteractionResponseData{
-					Content: "🔴 You do not have a running session.",
-				},
-			})
+
+			default_resp(s, i.Interaction, "🔴 You do not have a running session.")
+
 		} else {
 
-			var value_string string
+			var resp_string string
 
-			val, err := js_sessions[resolve_user(i).ID].VM.Run(code_string)
+			val, err := run_code(js_sessions[resolve_user(i).ID].VM, code_string, 2)
+
 			if err != nil {
-				value_string = fmt.Sprintf("🔴 **Error:** `%s`", trunc_err(err.Error()))
+				resp_string = fmt.Sprintf("🔴 **Error:** `%s`", trunc_err(err.Error()))
 			} else {
 
-				value_string, _ = val.ToString()
+				resp_string, _ = val.ToString()
 			}
 
-			s.InteractionRespond(i.Interaction, &dg.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &dg.InteractionResponseData{
-					Content: value_string,
-				},
-			})
+			default_resp(s, i.Interaction, resp_string)
 
 		}
 	default:
-		s.InteractionRespond(i.Interaction, &dg.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &dg.InteractionResponseData{
-				Content: "Unrecognized option. Try restarting your Discord client. If the problem persists contact the maker of this bot.",
-			},
-		})
-
+		default_resp(s, i.Interaction, "Unrecognized option. Try restarting your Discord client. If the problem persists contact the maker of this bot.")
 	}
 
 }
@@ -130,20 +120,12 @@ func handle_start(s *dg.Session, i *dg.InteractionCreate) {
 	}
 
 	if !successful {
-		s.InteractionRespond(i.Interaction, &dg.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &dg.InteractionResponseData{
-				Content: error_string,
-			},
-		})
+
+		default_resp(s, i.Interaction, error_string)
+
 	} else {
 
-		s.InteractionRespond(i.Interaction, &dg.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &dg.InteractionResponseData{
-				Content: "🟢 Session started successfully.",
-			},
-		})
+		default_resp(s, i.Interaction, "🟢 Session started successfully.")
 
 	}
 
@@ -162,11 +144,6 @@ func handle_end(s *dg.Session, i *dg.InteractionCreate) {
 		resp_string = "🟢 Session closed successfully."
 	}
 
-	s.InteractionRespond(i.Interaction, &dg.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &dg.InteractionResponseData{
-			Content: resp_string,
-		},
-	})
+	default_resp(s, i.Interaction, resp_string)
 
 }
