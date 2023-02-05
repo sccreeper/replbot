@@ -22,8 +22,9 @@ const (
 )
 
 type Session struct {
-	VM          *otto.Otto
-	TimeCreated int64
+	VM              *otto.Otto
+	TimeCreated     int64
+	LastInteraction int64
 }
 
 func handle_eval(s *dg.Session, i *dg.InteractionCreate) {
@@ -35,7 +36,7 @@ func handle_eval(s *dg.Session, i *dg.InteractionCreate) {
 	code_string := options[1].StringValue()
 
 	if len(code_string) > MaxCodeLength {
-		default_resp(s, i.Interaction, fmt.Sprintf("🔴 Code is too long (max allowed is %d). Yours was %d char(s) long.", MaxCodeLength, len(code_string)))
+		default_resp(s, i.Interaction, fmt.Sprintf("🔴 Code is too long (max allowed is %d). Yours was %d char(s) long.", MaxCodeLength, len(code_string)), "Code too long")
 	}
 
 	switch mode {
@@ -58,20 +59,26 @@ func handle_eval(s *dg.Session, i *dg.InteractionCreate) {
 
 			} else {
 
-				value_string, err = value.ToString()
+				str_val, err := value.ToString()
 				check_error(err)
+				value_string = fmt.Sprintf("```%s```", str_val)
+
 			}
 		}
 
-		default_resp(s, i.Interaction, value_string)
+		default_resp(s, i.Interaction, value_string, "Evaluate")
 
 	case int64(SessionModeOption):
 
 		if _, ok := js_sessions[resolve_user(i).ID]; !ok {
 
-			default_resp(s, i.Interaction, "🔴 You do not have a running session.")
+			default_resp(s, i.Interaction, "🔴 You do not have a running session.", "Error")
 
 		} else {
+
+			user_session := js_sessions[resolve_user(i).ID]
+			user_session.LastInteraction = time.Now().Unix()
+			js_sessions[resolve_user(i).ID] = user_session
 
 			var resp_string string
 
@@ -81,14 +88,16 @@ func handle_eval(s *dg.Session, i *dg.InteractionCreate) {
 				resp_string = fmt.Sprintf("🔴 **Error:** `%s`", trunc_err(err.Error()))
 			} else {
 
-				resp_string, _ = val.ToString()
+				str_val, err := val.ToString()
+				check_error(err)
+				resp_string = fmt.Sprintf("```%s```", str_val)
 			}
 
-			default_resp(s, i.Interaction, resp_string)
+			default_resp(s, i.Interaction, resp_string, "Evaluating")
 
 		}
 	default:
-		default_resp(s, i.Interaction, "Unrecognized option. Try restarting your Discord client. If the problem persists contact the maker of this bot.")
+		default_resp(s, i.Interaction, "🔴 Unrecognized option. Try restarting your Discord client. If the problem persists contact the maker of this bot.", "Error")
 	}
 
 }
@@ -115,7 +124,7 @@ func handle_start(s *dg.Session, i *dg.InteractionCreate) {
 				error_string = "🔴 There was an error when starting your session."
 			} else {
 				successful = true
-				js_sessions[i.Member.User.ID] = Session{VM: vm, TimeCreated: time.Now().Unix()}
+				js_sessions[i.Member.User.ID] = Session{VM: vm, TimeCreated: time.Now().Unix(), LastInteraction: time.Now().Unix()}
 			}
 		}
 
@@ -123,11 +132,11 @@ func handle_start(s *dg.Session, i *dg.InteractionCreate) {
 
 	if !successful {
 
-		default_resp(s, i.Interaction, error_string)
+		default_resp(s, i.Interaction, error_string, "Starting session")
 
 	} else {
 
-		default_resp(s, i.Interaction, "🟢 Session started successfully.")
+		default_resp(s, i.Interaction, "🟢 Session started successfully.", "Starting session")
 
 	}
 
@@ -146,7 +155,7 @@ func handle_end(s *dg.Session, i *dg.InteractionCreate) {
 		resp_string = "🟢 Session closed successfully."
 	}
 
-	default_resp(s, i.Interaction, resp_string)
+	default_resp(s, i.Interaction, resp_string, "Ending session")
 
 }
 
@@ -187,6 +196,7 @@ __Bot stats__
 				int(seconds),
 			),
 		),
+		"Bot Info",
 	)
 
 }

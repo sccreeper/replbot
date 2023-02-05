@@ -53,11 +53,17 @@ func resolve_user(i *dg.InteractionCreate) *dg.User {
 }
 
 // Sends a default response, avoids boilerplate.
-func default_resp(s *dg.Session, i *dg.Interaction, message_string string) {
+func default_resp(s *dg.Session, i *dg.Interaction, message_string string, title string) {
 	s.InteractionRespond(i, &dg.InteractionResponse{
 		Type: dg.InteractionResponseChannelMessageWithSource,
 		Data: &dg.InteractionResponseData{
-			Content: message_string,
+			Embeds: []*dg.MessageEmbed{
+				{
+					Title:       title,
+					Description: message_string,
+					Color:       16766305,
+				},
+			},
 		},
 	})
 }

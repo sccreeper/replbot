@@ -6,7 +6,9 @@ import (
 
 func receive_message(s *discordgo.Session, m *discordgo.MessageCreate) {
 
-	if m.Content[0] != '!' {
+	if m.Content == "" {
+		return
+	} else if m.Content[0] != '!' {
 		return
 	} else if m.Author.ID == s.State.User.ID {
 		return
