@@ -64,11 +64,16 @@ var (
 				},
 			},
 		},
+		{
+			Name:        "info",
+			Description: "Bot info",
+		},
 	}
 
 	command_handlers = map[string]func(s *dg.Session, i *dg.InteractionCreate){
 		"evaluate": handle_eval,
 		"end":      handle_end,
 		"start":    handle_start,
+		"info":     handle_info,
 	}
 )

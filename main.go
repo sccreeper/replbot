@@ -6,16 +6,19 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"time"
 
 	dg "github.com/bwmarrin/discordgo"
 )
 
 var bot_token string
 var remove_commands bool = false
+var start_time time.Time
 
 func init() {
 
 	bot_token = os.Getenv("BOT_TOKEN")
+	start_time = time.Now()
 
 	flag.BoolVar(&remove_commands, "rmcmd", false, "Remove commands")
 	flag.Parse()

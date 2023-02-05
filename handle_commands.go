@@ -5,6 +5,8 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
+	"runtime"
 	"time"
 
 	dg "github.com/bwmarrin/discordgo"
@@ -145,5 +147,46 @@ func handle_end(s *dg.Session, i *dg.InteractionCreate) {
 	}
 
 	default_resp(s, i.Interaction, resp_string)
+
+}
+
+func handle_info(s *dg.Session, i *dg.InteractionCreate) {
+
+	log.Println(gen_interaction_log("info", i))
+
+	var mem_stats runtime.MemStats
+	runtime.ReadMemStats(&mem_stats)
+
+	time_difference := time.Since(start_time)
+
+	hours := time_difference.Hours()
+	minutes := math.Mod(time_difference.Minutes(), 60)
+	seconds := math.Mod(time_difference.Seconds(), 60)
+
+	default_resp(s, i.Interaction,
+		fmt.Sprintf(
+			`
+__About__
+
+Provides a REPL environment to experiment with various scripting languages.
+Made by oscarcp.
+
+__Bot stats__
+
+**Current sessions:** %d
+**Memory usage:** %.2fmb
+**Uptime:** %s
+
+	
+	`,
+			len(js_sessions),
+			float64(mem_stats.Sys)/math.Pow10(6),
+			fmt.Sprintf("%d hour(s) %d minute(s) %d second(s)",
+				int(hours),
+				int(minutes),
+				int(seconds),
+			),
+		),
+	)
 
 }
