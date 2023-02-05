@@ -15,7 +15,8 @@ var remove_commands bool = false
 
 func init() {
 
-	flag.StringVar(&bot_token, "token", "", "The token for the bot")
+	bot_token = os.Getenv("BOT_TOKEN")
+
 	flag.BoolVar(&remove_commands, "rmcmd", false, "Remove commands")
 	flag.Parse()
 
