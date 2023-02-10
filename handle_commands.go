@@ -25,8 +25,10 @@ type Session struct {
 	VM              *otto.Otto
 	TimeCreated     int64
 	LastInteraction int64
+	History         string
 }
 
+// Evaluates a code string
 func handle_eval(s *dg.Session, i *dg.InteractionCreate) {
 
 	log.Println(gen_interaction_log("evaluate", i))
@@ -84,12 +86,21 @@ func handle_eval(s *dg.Session, i *dg.InteractionCreate) {
 
 			val, err := run_code(js_sessions[resolve_user(i).ID].VM, code_string, 2)
 
+			user_session.History += fmt.Sprintf(">>> %s\n", code_string)
+
 			if err != nil {
+				user_session.History += fmt.Sprintf("%s\n", trunc_err(err.Error()))
+				js_sessions[resolve_user(i).ID] = user_session
+
 				resp_string = fmt.Sprintf("🔴 **Error:** `%s`", trunc_err(err.Error()))
 			} else {
 
 				str_val, err := val.ToString()
 				check_error(err)
+
+				user_session.History += fmt.Sprintf("%s\n", str_val)
+				js_sessions[resolve_user(i).ID] = user_session
+
 				resp_string = fmt.Sprintf("```%s```", str_val)
 			}
 
@@ -102,6 +113,7 @@ func handle_eval(s *dg.Session, i *dg.InteractionCreate) {
 
 }
 
+// Starts a session.
 func handle_start(s *dg.Session, i *dg.InteractionCreate) {
 
 	log.Print(gen_interaction_log("start", i))
@@ -142,6 +154,7 @@ func handle_start(s *dg.Session, i *dg.InteractionCreate) {
 
 }
 
+// Kills a session
 func handle_end(s *dg.Session, i *dg.InteractionCreate) {
 
 	log.Println(gen_interaction_log("end", i))
@@ -159,6 +172,7 @@ func handle_end(s *dg.Session, i *dg.InteractionCreate) {
 
 }
 
+// Bot about page
 func handle_info(s *dg.Session, i *dg.InteractionCreate) {
 
 	log.Println(gen_interaction_log("info", i))
@@ -201,6 +215,7 @@ __Bot stats__
 
 }
 
+// Help menu with all commands explained in more detail.
 func handle_help(s *dg.Session, i *dg.InteractionCreate) {
 
 	s.InteractionRespond(i.Interaction, &dg.InteractionResponse{
@@ -216,11 +231,66 @@ func handle_help(s *dg.Session, i *dg.InteractionCreate) {
 						{Name: "/start <language>", Value: "Start a REPL session with a specified language. Sessions timeout after 5 minutes of inactivity."},
 						{Name: "/end", Value: "Ends your REPL session."},
 						{Name: "/info", Value: "About page for the bot."},
+						{Name: "/history", Value: "Displays evaluation history for a session"},
+						{Name: "/clear", Value: "Clears the evaluation history for a session. This does not include any values that have been declared."},
 					},
-					Color: 16766305,
+					Color: 1976635,
 				},
 			},
 		},
 	})
+
+}
+
+// Shows session history
+func handle_history(s *dg.Session, i *dg.InteractionCreate) {
+
+	if _, ok := js_sessions[resolve_user(i).ID]; !ok {
+		default_resp(s, i.Interaction, "🔴 You do not have a running session.", "Error")
+	} else {
+
+		time_started := time.Unix(js_sessions[resolve_user(i).ID].TimeCreated, 0)
+
+		var history_string string
+
+		if js_sessions[resolve_user(i).ID].History == "" {
+			history_string = "```No history in session!```"
+		} else {
+			history_string = fmt.Sprintf("```%s```", js_sessions[resolve_user(i).ID].History)
+		}
+
+		s.InteractionRespond(i.Interaction, &dg.InteractionResponse{
+			Type: dg.InteractionResponseChannelMessageWithSource,
+			Data: &dg.InteractionResponseData{
+				Embeds: []*dg.MessageEmbed{
+					{
+						Title:       "Session History",
+						Description: fmt.Sprintf("Session started at %s", time_started.String()),
+						Fields: []*dg.MessageEmbedField{
+							{Name: "History", Value: history_string},
+						},
+						Color: 1976635,
+					},
+				},
+			},
+		})
+
+	}
+
+}
+
+func handle_clear(s *dg.Session, i *dg.InteractionCreate) {
+
+	if _, ok := js_sessions[resolve_user(i).ID]; !ok {
+		default_resp(s, i.Interaction, "🔴 You do not have a running session.", "Error")
+	} else {
+
+		user_session := js_sessions[resolve_user(i).ID]
+		user_session.History = ""
+		js_sessions[resolve_user(i).ID] = user_session
+
+		default_resp(s, i.Interaction, "🟢 History cleared successfully.", "Clearing history")
+
+	}
 
 }

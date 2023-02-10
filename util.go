@@ -61,7 +61,7 @@ func default_resp(s *dg.Session, i *dg.Interaction, message_string string, title
 				{
 					Title:       title,
 					Description: message_string,
-					Color:       16766305,
+					Color:       1976635,
 				},
 			},
 		},

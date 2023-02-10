@@ -72,6 +72,14 @@ var (
 			Name:        "help",
 			Description: "Help menu",
 		},
+		{
+			Name:        "history",
+			Description: "Session history",
+		},
+		{
+			Name:        "clear",
+			Description: "Clears the history of a session",
+		},
 	}
 
 	command_handlers = map[string]func(s *dg.Session, i *dg.InteractionCreate){
@@ -80,5 +88,7 @@ var (
 		"start":    handle_start,
 		"info":     handle_info,
 		"help":     handle_help,
+		"history":  handle_history,
+		"clear":    handle_clear,
 	}
 )
