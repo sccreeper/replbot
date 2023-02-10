@@ -218,6 +218,8 @@ __Bot stats__
 // Help menu with all commands explained in more detail.
 func handle_help(s *dg.Session, i *dg.InteractionCreate) {
 
+	log.Println(gen_interaction_log("help", i))
+
 	s.InteractionRespond(i.Interaction, &dg.InteractionResponse{
 		Type: dg.InteractionResponseChannelMessageWithSource,
 		Data: &dg.InteractionResponseData{
@@ -244,6 +246,8 @@ func handle_help(s *dg.Session, i *dg.InteractionCreate) {
 
 // Shows session history
 func handle_history(s *dg.Session, i *dg.InteractionCreate) {
+
+	log.Println(gen_interaction_log("history", i))
 
 	if _, ok := js_sessions[resolve_user(i).ID]; !ok {
 		default_resp(s, i.Interaction, "🔴 You do not have a running session.", "Error")
@@ -280,6 +284,8 @@ func handle_history(s *dg.Session, i *dg.InteractionCreate) {
 }
 
 func handle_clear(s *dg.Session, i *dg.InteractionCreate) {
+
+	log.Println(gen_interaction_log("clear", i))
 
 	if _, ok := js_sessions[resolve_user(i).ID]; !ok {
 		default_resp(s, i.Interaction, "🔴 You do not have a running session.", "Error")
