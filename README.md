@@ -23,6 +23,13 @@ Add the bot to your server - [click here](https://discord.com/oauth2/authorize?c
 - `/history` Displays evaluation history for a session
 - `/clear` Clears the evaluation history for a session. This does not include any values that have been declared.
 
+### Run the bot
+
+```
+docker build -t bot_repl
+docker run bot_repl --env BOT_TOKEN=<token>
+```
+
 ### Credits
 
 - otto - [robertkrimen/otto](https://github.com/robertkrimen/otto)
